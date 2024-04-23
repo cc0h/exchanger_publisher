@@ -6,6 +6,8 @@
 #include <exchanger_publisher/ExchangerConfig.h>
 #include <dynamic_reconfigure/server.h>
 
+#define CV_PI   3.1415926535897932384626433832795
+
 class ExchangerPublisherNode
 {
 public:
@@ -18,6 +20,7 @@ private:
   void reconfigureCB(exchanger_publisher::ExchangerConfig& config, uint32_t level)
   {
     current_config_ = config;
+
 
   }
 
@@ -35,7 +38,16 @@ private:
     transformStamped.transform.translation.z = current_config_.z;
 
     tf2::Quaternion q;
-    q = rpy2quat(current_config_.roll, current_config_.pitch, current_config_.yaw);
+    double  temp_roll, temp_yaw, temp_pitch;
+//    temp_yaw = current_config_.yaw + CV_PI;
+//    temp_roll = current_config_.roll +CV_PI;
+    temp_pitch = current_config_.pitch + CV_PI;
+
+    roll_ = CV_PI / 180 * current_config_.roll;
+    pitch_ = CV_PI / 180 * temp_pitch;
+    yaw_ = CV_PI / 180 * current_config_.yaw;
+
+    q.setRPY(roll_, pitch_, yaw_);
     transformStamped.transform.rotation.x = q.x();
     transformStamped.transform.rotation.y = q.y();
     transformStamped.transform.rotation.z = q.z();
@@ -58,6 +70,7 @@ private:
   dynamic_reconfigure::Server<exchanger_publisher::ExchangerConfig>* dyn_server_;
   exchanger_publisher::ExchangerConfig current_config_;
   ros::Timer timer_;
+  double roll_, pitch_, yaw_;
 };
 
 
