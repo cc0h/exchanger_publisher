@@ -1,10 +1,11 @@
 #include <ros/ros.h>
 #include <tf2_ros/transform_broadcaster.h>
+#include "tf2_ros/static_transform_broadcaster.h"
 #include <tf2/LinearMath/Quaternion.h>
-#include <tf2/LinearMath/Matrix3x3.h>
 #include <geometry_msgs/TransformStamped.h>
 #include <exchanger_publisher/ExchangerConfig.h>
 #include <dynamic_reconfigure/server.h>
+#include "random"
 
 #define CV_PI   3.1415926535897932384626433832795
 
@@ -20,8 +21,13 @@ private:
   void reconfigureCB(exchanger_publisher::ExchangerConfig& config, uint32_t level)
   {
     current_config_ = config;
-
-
+    if (current_config_.gen != last_value_)
+    {
+      last_value_ =current_config_.gen;
+      current_config_.roll = gen_rand_number(-45.0, 45.0);
+      current_config_.pitch = gen_rand_number(0.0, 90.0);
+      current_config_.yaw = gen_rand_number(-135.0, 135.0);
+    }
   }
 
   void publishTF(const ros::TimerEvent& event)
@@ -30,21 +36,15 @@ private:
 
     transformStamped.header.stamp = ros::Time::now();
     transformStamped.header.frame_id = "map";
-    transformStamped.child_frame_id = "exchanger";
-
-    // Set your desired transform values here (e.g., translation and rotation)
+    transformStamped.child_frame_id = "exchanger_base";
     transformStamped.transform.translation.x = current_config_.x;
     transformStamped.transform.translation.y = current_config_.y;
     transformStamped.transform.translation.z = current_config_.z;
 
     tf2::Quaternion q;
-    double  temp_roll, temp_yaw, temp_pitch;
-//    temp_yaw = current_config_.yaw + CV_PI;
-//    temp_roll = current_config_.roll +CV_PI;
-    temp_pitch = current_config_.pitch + CV_PI;
 
     roll_ = CV_PI / 180 * current_config_.roll;
-    pitch_ = CV_PI / 180 * temp_pitch;
+    pitch_ = CV_PI / 180 * current_config_.pitch;
     yaw_ = CV_PI / 180 * current_config_.yaw;
 
     q.setRPY(roll_, pitch_, yaw_);
@@ -56,12 +56,10 @@ private:
     broadcaster_.sendTransform(transformStamped);
   }
 
-  static tf2::Quaternion rpy2quat(double roll, double pitch, double yaw) {
-    tf2::Quaternion q;
-    tf2::Matrix3x3 m;
-    m.setRPY(roll, pitch, yaw);
-    m.getRotation(q);
-    return q;
+  double gen_rand_number(double min, double max){
+    gen_();
+    std::uniform_real_distribution<> dis(min, max);
+    return dis(gen_);
   }
 
 
@@ -71,6 +69,8 @@ private:
   exchanger_publisher::ExchangerConfig current_config_;
   ros::Timer timer_;
   double roll_, pitch_, yaw_;
+  std::mt19937 gen_;
+  bool last_value_{true};
 };
 
 
@@ -78,6 +78,23 @@ int main(int argc, char** argv)
 {
   ros::init(argc, argv, "tf_publisher");
   ExchangerPublisherNode node;
+  geometry_msgs::TransformStamped static_transformstamped;
+
+  static_transformstamped.header.stamp = ros::Time::now();
+  static_transformstamped.header.frame_id = "exchanger_base";
+  static_transformstamped.child_frame_id = "exchanger";
+  static_transformstamped.transform.translation.x = 0;
+  static_transformstamped.transform.translation.y = 0;
+  static_transformstamped.transform.translation.z = 0;
+  tf2::Quaternion sq;
+  sq.setRPY(CV_PI, 0 , CV_PI);
+  static_transformstamped.transform.rotation.x = sq.x();
+  static_transformstamped.transform.rotation.y = sq.y();
+  static_transformstamped.transform.rotation.z = sq.z();
+  static_transformstamped.transform.rotation.w = sq.w();
+
+  tf2_ros::StaticTransformBroadcaster static_broadcaster;
+  static_broadcaster.sendTransform(static_transformstamped);
   ros::spin();
   return 0;
 }
