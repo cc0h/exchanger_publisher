@@ -24,9 +24,49 @@ private:
     if (current_config_.gen != last_value_)
     {
       last_value_ =current_config_.gen;
-      current_config_.roll = gen_rand_number(-45.0, 45.0);
-      current_config_.pitch = gen_rand_number(0.0, 90.0);
-      current_config_.yaw = gen_rand_number(-135.0, 135.0);
+      switch (current_config_.level) {
+        case 1:
+          current_config_.x = 0.2;
+          current_config_.y = gen_rand_number(-0.185, 0.185);
+          current_config_.z = 0.72;
+          current_config_.roll = 0;
+          current_config_.pitch = 0;
+          current_config_.yaw = 0;
+          break;
+        case 2:
+          current_config_.x = gen_rand_number(0, 0.27);
+          current_config_.y = gen_rand_number(-0.255, 0.255);
+          current_config_.z = gen_rand_number(0.72, 0.9);
+          current_config_.roll = 0;
+          current_config_.pitch = 0;
+          current_config_.yaw = 0;
+          break;
+        case 3:
+          current_config_.x = gen_rand_number(0, 0.27);
+          current_config_.y = gen_rand_number(-0.255, 0.255);
+          current_config_.z = gen_rand_number(0.72, 0.9);
+          current_config_.roll = gen_rand_number(-45.0, 45.0);
+          current_config_.pitch = gen_rand_number(0.0, 90.0);
+          current_config_.yaw = 0;
+          break;
+        case 4:
+          current_config_.x = gen_rand_number(0, 0.27);
+          current_config_.y = gen_rand_number(-0.255, 0.255);
+          current_config_.z = gen_rand_number(0.72, 0.9);
+          current_config_.roll = gen_rand_number(-45.0, 45.0);
+          current_config_.pitch = gen_rand_number(0.0, 90.0);
+          current_config_.yaw = gen_rand_number(-90.0, 90.0);
+          break;
+        case 5:
+          current_config_.x = gen_rand_number(0, 0.27);
+          current_config_.y = gen_rand_number(-0.255, 0.255);
+          current_config_.z = gen_rand_number(0.72, 0.9);
+          current_config_.roll = gen_rand_number(-45.0, 45.0);
+          current_config_.pitch = gen_rand_number(0.0, 90.0);
+          current_config_.yaw = gen_rand_number(-135.0, 135.0);
+          break;
+      }
+      dyn_server_->updateConfig(current_config_);
     }
   }
 
@@ -37,7 +77,7 @@ private:
     transformStamped.header.stamp = ros::Time::now();
     transformStamped.header.frame_id = "map";
     transformStamped.child_frame_id = "exchanger_base";
-    transformStamped.transform.translation.x = current_config_.x;
+    transformStamped.transform.translation.x = current_config_.x + 0.3;
     transformStamped.transform.translation.y = current_config_.y;
     transformStamped.transform.translation.z = current_config_.z;
 
