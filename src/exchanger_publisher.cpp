@@ -21,9 +21,8 @@ private:
   void reconfigureCB(exchanger_publisher::ExchangerConfig& config, uint32_t level)
   {
     current_config_ = config;
-    if (current_config_.gen != last_value_)
+    if (current_config_.gen)
     {
-      last_value_ =current_config_.gen;
       switch (current_config_.level) {
         case 1:
           current_config_.x = 0.2;
@@ -110,7 +109,6 @@ private:
   ros::Timer timer_;
   double roll_, pitch_, yaw_;
   std::mt19937 gen_;
-  bool last_value_{true};
 };
 
 
